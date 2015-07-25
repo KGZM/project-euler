@@ -29,14 +29,18 @@
         products (for [x span y span] (* x y))]
     (apply max (filter (comp palindromic? str) products))))
 
-(deftest given-solution
-  (is 9009 (highest-palindrome 2)))
 
 (comment 
   (highest-palindrome 3) ;;906609
   (highest-palindrome 5) ;; I haven't the patience.
   )
 
+;;An attempt to make it slightly faster, but having to check if each palindrome
+;; is a product of two numbers with the same number of digits is still giving terrible performance. 
+;; For 4 digits it takes on the order of 27 seconds where as the brute force solution takes 39. 
+;; I couldn't find any particular properties of palindromic numbers to make the acceptance check any easier.
+
+;;EDIT I'm going to leave my above 
 (defn generate-single-palindrome [digits]
   (let [even-span (range (expt 10 (dec (quot digits 2))) 
                     (expt 10 (quot digits 2)))
@@ -57,15 +61,17 @@
         upper-digits (->> upper-product str count)
         span (range lower-digits (inc upper-digits))
         is-product (fn [n] (->> (range lower (inc upper)) 
-                                (filter #(and (->> (quot n %) 
-                                                   str 
-                                                   count 
-                                                   (= digits)) 
+                                (filter #(and (<= lower (quot n %) upper)
                                               (zero? (rem n %))))
                                 (first)
                                 (some?)))
         accept (fn [n] (and (< (* lower lower)
                                n
                                (* upper upper))
-                            (is-product n))) ]
+                            (is-product n) 
+                            ))
+        ]
     (filter accept (mapcat generate-single-palindrome span))))
+
+(deftest given-solution
+  (is 9009 (highest-palindrome 2)))
