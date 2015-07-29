@@ -5,7 +5,6 @@
 ;; The prime factors of 13195 are 5, 7, 13 and 29.
 ;; What is the largest prime factor of the number 600851475143 ?
 
-(set! *unchecked-math* true)
 
 (defn prime? [n]
   (->> (range 2 (inc (bigint (Math/sqrt n))))
@@ -17,8 +16,8 @@
   (loop [quotient n 
          candidate (quot n 2)
          factors []]
-    (if (or (= quotient 1)
-            (= candidate 1))
+    (if (or (<= quotient 1)
+            (<= candidate 1))
       factors
       (let [is-factor (is-multiple quotient candidate)] 
         (recur 
@@ -31,7 +30,7 @@
           (if is-factor
             (if (prime? candidate)
               (conj factors candidate)
-              (concat (prime-factors candidate) factors))
+              (concat (slow-prime-factors candidate) factors))
             factors))))))
 
 (defn strict-prime-factors 
@@ -41,7 +40,7 @@
   but I'm willing to let it rest for now as my personal best solution."
   [n]
   (loop [quotient n candidate 2 factors []]
-    (if (= quotient 1) factors
+    (if (<= quotient 1) factors
       (if (is-multiple quotient candidate)
         (recur (quot quotient candidate) candidate (conj factors candidate))
         (recur quotient (inc candidate) factors)))))
@@ -51,7 +50,7 @@
   but it was interesting to write."
   ([quotient] (lazy-prime-factors quotient 2))
   ([quotient candidate]
-   (cond (= quotient 1) []
+   (cond (<= quotient 1) []
          (is-multiple quotient candidate) 
          (cons candidate 
                (lazy-seq 

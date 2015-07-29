@@ -1,5 +1,7 @@
 (ns euler.ex4
-  (:require [clojure.test :refer :all]
+  (:require [euler.ex3 :refer [lazy-prime-factors]]
+            [clojure.math.combinatorics :as combo]
+            [clojure.test :refer :all]
             [clojure.string :as string]
             [clojure.math.numeric-tower :refer [expt]]))
 
@@ -20,7 +22,7 @@
   (is (not (palindromic? "definitelynot"))))
 
 
-(defn highest-palindrome 
+(defn highest-palindrome-brute-force 
   "A brute force solution."
   [digits]
   (let [upper (expt 10 digits)
@@ -40,7 +42,17 @@
 ;; For 4 digits it takes on the order of 27 seconds where as the brute force solution takes 39. 
 ;; I couldn't find any particular properties of palindromic numbers to make the acceptance check any easier.
 
-;;EDIT I'm going to leave my above 
+;;EDIT I'm going to leave my above lament in place for posterity but I believe I can make this much faster by inspecting the factors of the numbers in question.
+
+;; I'm gathering my tools here:
+(def prime-factors lazy-prime-factors)
+
+(defn multiple-pairs [n]
+  (let [factors (combo/partitions (lazy-prime-factors n) :min 2 :max 2)
+        to-pairs (fn [pair] (map (partial apply *) pair))]
+    (map to-pairs factors)))
+
+
 (defn generate-single-palindrome [digits]
   (let [even-span (range (expt 10 (dec (quot digits 2))) 
                     (expt 10 (quot digits 2)))
@@ -52,7 +64,7 @@
         f    (if (even? digits) even-f odd-f)]
     (map (comp read-string f) span)))
 
-(defn generate-palindromes-as-product [digits]
+(defn generate-palindromes-for-digits [digits]
   (let [lower (expt 10 (dec digits))
         upper (dec (expt 10 digits))
         lower-product (* lower lower)
@@ -65,13 +77,36 @@
                                               (zero? (rem n %))))
                                 (first)
                                 (some?)))
-        accept (fn [n] (and (< (* lower lower)
-                               n
-                               (* upper upper))
+        accept (fn [n] (and (<= lower-product n upper-product)
                             (is-product n) 
                             ))
         ]
     (filter accept (mapcat generate-single-palindrome span))))
 
-(deftest given-solution
-  (is 9009 (highest-palindrome 2)))
+(defn generate-palindromes-for-digits-pessimized [digits]
+  (let [lower (expt 10 (dec digits))
+        upper (dec (expt 10 digits))
+        lower-product (* lower lower)
+        upper-product (* upper upper)
+        lower-digits (->> lower-product str count)
+        upper-digits (->> upper-product str count)
+        span (range lower-digits (inc upper-digits))
+        has-digits (fn [pair] (every? #(<= lower % upper) pair))
+        accept (fn [n] (and (<= lower-product n upper-product)
+                            (some has-digits (multiple-pairs n))))
+        ]
+    (filter accept (mapcat generate-single-palindrome span))))
+
+(defn highest-palindrome-generated-for-digits [digits]
+  (apply max (generate-palindromes-for-digits digits)))
+
+(defn highest-palindrome-generated-for-digits-pessimized 
+  [digits] (apply max (generate-palindromes-for-digits-pessimized digits)))
+
+(deftest comparing-algorithms
+  (doseq [f [highest-palindrome-brute-force
+             highest-palindrome-generated-for-digits
+             highest-palindrome-generated-for-digits-pessimized]]
+    
+  (is 9009 (f 2))
+  (is 906609 (f 3))))
