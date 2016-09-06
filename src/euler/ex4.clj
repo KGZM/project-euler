@@ -107,6 +107,7 @@
   (doseq [f [highest-palindrome-brute-force
              highest-palindrome-generated-for-digits
              highest-palindrome-generated-for-digits-pessimized]]
-    
+
   (is 9009 (f 2))
   (is 906609 (f 3))))
+

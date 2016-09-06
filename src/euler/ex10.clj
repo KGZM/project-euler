@@ -3,8 +3,8 @@
   (:require [clojure.test :refer :all]
             [euler.ex3 :refer [lazy-prime-factors]]))
 
-The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
-Find the sum of all the primes below two million.
+;; The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
+;; Find the sum of all the primes below two million.
 
 (defn primes-slow
   "This is superceded by the work below.
